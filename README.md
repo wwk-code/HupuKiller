@@ -26,7 +26,7 @@ outputs: 项目输出目录
 
 ### TODO-Specific:
 
-1.获取NBA2000年后决赛数据源、各大论坛评论数据源,并将它们按80%-20%的比例分割为Train/Validate DataSets
+1.获取NBA1990年后决赛数据源、各大论坛评论数据源,并将它们按80%-20%的比例分割为Train/Validate DataSets
 
 2.对数据源进行前处理，然后取15%对模型进行LoRA微调
 
