@@ -92,5 +92,6 @@ def scrape_nba_finals():
 # Run the script
 if __name__ == "__main__":
     
-    scrape_nba_finals()
-
+    # scrape_nba_finals()
+    
+    logNBAStatisCrawler('i','','123')

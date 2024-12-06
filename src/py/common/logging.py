@@ -3,7 +3,7 @@ import logging,os
 
 # //////////////////////////////////////////////////////////////  Common  //////////////////////////////////////////////////////////////
 # 项目根目录
-project_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+project_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 turnOnNBAStatisCrawler = True
 
