@@ -31,3 +31,7 @@ outputs: 项目输出目录
 2.对数据源进行前处理，然后取15%对模型进行LoRA微调
 
 3.对微调后的模型做Validation Benchmark
+
+
+
+s
