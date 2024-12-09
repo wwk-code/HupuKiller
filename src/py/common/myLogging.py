@@ -5,12 +5,12 @@ import logging,os
 # 项目根目录
 project_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-turnOnNBAStatisCrawler = True
+turnOnNBAStatisCrawler = False
 
 
 # //////////////////////////////////////////////////////////////  NBAStatisCrawlerLogging  //////////////////////////////////////////////////////////////
 
-logging_output_dir = os.path.join(project_root_dir,"outputs","loggings")
+logging_output_dir = os.path.join(project_root_dir,"outputs","NBAFinalsStatisticCrawler","loggings")
 
 os.makedirs(logging_output_dir, exist_ok=True)
 
@@ -35,7 +35,7 @@ loggerNBAStatisCrawler.addHandler(NBAStatisCrawlerConsoleHandler)
 def logNBAStatisCrawler(mode: str ='i',preFix: str = '',content:str = ''):
 
     if not turnOnNBAStatisCrawler:
-        pass
+        return
 
     if len(content) == 0:
         raise Exception("Invalid Parameters for logNBAStatisCrawler!")

@@ -1,0 +1,10 @@
+/html/body/main/div/div[6]
+/html/body/main/div/div[6]
+document.querySelector("body > main > div > div:nth-child(8)")
+document.querySelector("body > main > div > div:nth-child(8) > table")
+
+
+document.querySelector("body > main > div > div:nth-child(9) > table")
+
+
+
