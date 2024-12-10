@@ -44,8 +44,9 @@ def parseSingleFinalGame(singleGameUrl: str):
     gameAwayTeam = gameTeams[0].getText()
     gameHomeTeam = gameTeams[1].getText()
     gameInActives = gameMetaInfo.select('p.match_inactive')
-    gameAwayInActives = gameInActives[0].getText()
-    gameHomeInActives = gameInActives[1].getText()
+
+    gameAwayInActives = 'None' if len(gameInActives) == 0 else gameInActives[0].getText()
+    gameHomeInActives = 'None' if len(gameInActives) == 0 else gameInActives[1].getText()
 
     game_MetaData['赛事标题'] = gameTitle
     game_MetaData['赛事类型'] = gameType
@@ -59,12 +60,17 @@ def parseSingleFinalGame(singleGameUrl: str):
     gameTeamInfos = soup.select('div.p-fixed > article.m-main > div.basic_advanced_stats.div_mainta')
     
     for i in [0,2]:
-        if i == 1 or i == 3:
-            continue 
         gameTeamData = {}
         gameTeamInfo = gameTeamInfos[i]
         gameTeamInfoTitle = gameTeamInfo.find('h3').getText()
         gameTeamInfoTable = gameTeamInfo.find('table')
+        if gameTeamInfoTable == None:
+            logNBAStatisCrawler('w',"parseSingleFinalGame",f"get a none table when fetch {gameTime} {gameTeamInfoTitle}")
+            if i == 0:
+                game_AwayTeamData = None
+            else:
+                game_HomeTeamData = None
+            continue
         gameTeamInfoTableHeaders = [header.get_text(strip=True) for header in gameTeamInfoTable.find_all('th')][2:][:21]
         gameTeamInfoTableHeaders[-1] = '正负值'
         gameTeamInfoTableData = []
@@ -148,48 +154,36 @@ def parse_singleYear_finalGame(year_url):
     if numOfGames != len(single_finalGame_urls):
         logNBAStatisCrawler('e','',f"num of final games: {numOfGames} != len of single final game urls: {len(single_finalGame_urls)}")
 
-    # 提取今年总决赛的场均球员数据
-    # for i in [8,9]:
-    #     tableJPath = f"body > main > div > div:nth-child({i}) > table"
-    #     playerAverageTable = soup.select_one(tableJPath)
-    #     playerAverageDataDict = parseSingleYearAverageTable(playerAverageTable)
-    #     if i == 8:
-    #         year_datas['主队球员场均数据'] = (playerAverageDataDict)
-    #     else:
-    #         year_datas['客队球员场均数据'] = (playerAverageDataDict)
+    # 提取当年总决赛的场均球员数据
+    for i in [8,9]:
+        tableJPath = f"body > main > div > div:nth-child({i}) > table"
+        playerAverageTable = soup.select_one(tableJPath)
+        playerAverageDataDict = parseSingleYearAverageTable(playerAverageTable)
+        if i == 8:
+            year_datas['主队球员场均数据'] = (playerAverageDataDict)
+        else:
+            year_datas['客队球员场均数据'] = (playerAverageDataDict)
 
     for single_finalGame_url in single_finalGame_urls:
         game_datas.append(parseSingleFinalGame(single_finalGame_url))
     
-    temp = 1
-    # return year_datas
     return year_datas,game_datas
 
 
-def saveYearDatas2Csv(year_datas: list):
+def saveYearDatas2Csv(year_data: list):
     finalDatas_outputPath_prefix = f"{project_root_dir}/outputs/NBAFinalsStatisticCrawler"
-    singleYearGamesDatas = f"{finalDatas_outputPath_prefix}/"
     finalAverageDatas_csv_path = f"{finalDatas_outputPath_prefix}/finalAverageDatas.csv" 
-
-    yearAverageDatas = []  # 二级列表,存储每一年总决赛的主客队球员场均数据
-    years = []
+    yearAverageData = [year_data['主队球员场均数据'],year_data['客队球员场均数据']]  
+    year = year_data['年份']
     new_yearAverageDatas = []  
-
-    for year_data in year_datas:
-        years.append(year_data['年份'])
-        yearAverageDatas.append([year_data['主队球员场均数据'],year_data['客队球员场均数据']])
-
-    yearIdx = 0
-    for yearly_data in yearAverageDatas:
-        for data_dict in yearly_data:
-            title = years[yearIdx] + "NBA总决赛" + data_dict['数据标题']
-            headers = data_dict['数据表头']
-            items = data_dict['数据表项']
-            new_yearAverageDatas.append([title] + [''] * (len(headers) - 1))  # 表标题
-            new_yearAverageDatas.append(headers)  # 表头
-            for item in items:
-                new_yearAverageDatas.append(item)
-        yearIdx += 1
+    for data_dict in yearAverageData:
+        title = year + "NBA总决赛" + data_dict['数据标题']
+        headers = data_dict['数据表头']
+        items = data_dict['数据表项']
+        new_yearAverageDatas.append([title] + [''] * (len(headers) - 1))  # 表标题
+        new_yearAverageDatas.append(headers)  # 表头
+        for item in items:
+            new_yearAverageDatas.append(item)
     if os.path.exists(finalAverageDatas_csv_path):
         open(finalAverageDatas_csv_path, 'w').close()  # 清空文件
     df = pd.DataFrame(new_yearAverageDatas)
@@ -225,34 +219,36 @@ def saveGamesDatas2Csv(game_datas: list):
         # 比赛客队球员数据
         gameAwayTeamSubTableDatas = []
         gameAwayTeamDatas = game_data['比赛客队球员数据']
-        gameAwayTeamDataTitle = [gameAwayTeamDatas['数据标题']] + [''] * (numOfCols - 1)  # 子表标题
-        gameAwayTeamSubTableDatas.append([''] * numOfCols) # 空行
-        gameAwayTeamSubTableDatas.append(gameAwayTeamDataTitle)
-        gameAwayTeamDataHeader = gameAwayTeamDatas['数据表头']
-        gameAwayTeamSubTableDatas.append(gameAwayTeamDataHeader)
-        for gameAwayTeamDataItem in gameAwayTeamDatas['数据表项']:
-            gameAwayTeamSubTableDatas.append(gameAwayTeamDataItem)  
-        df = pd.DataFrame(gameAwayTeamSubTableDatas)
-        df.to_csv(finalGameDatasCsvPath, mode='a', header=False, index=False, encoding='utf-8-sig')
+        if gameAwayTeamDatas != None:
+            gameAwayTeamDataTitle = [gameAwayTeamDatas['数据标题']] + [''] * (numOfCols - 1)  # 子表标题
+            gameAwayTeamSubTableDatas.append([''] * numOfCols) # 空行
+            gameAwayTeamSubTableDatas.append(gameAwayTeamDataTitle)
+            gameAwayTeamDataHeader = gameAwayTeamDatas['数据表头']
+            gameAwayTeamSubTableDatas.append(gameAwayTeamDataHeader)
+            for gameAwayTeamDataItem in gameAwayTeamDatas['数据表项']:
+                gameAwayTeamSubTableDatas.append(gameAwayTeamDataItem)  
+            df = pd.DataFrame(gameAwayTeamSubTableDatas)
+            df.to_csv(finalGameDatasCsvPath, mode='a', header=False, index=False, encoding='utf-8-sig')
         # 比赛主队球员数据
         gameHomeTeamSubTableDatas = []
         gameHomeTeamDatas = game_data['比赛主队球员数据']
-        gameHomeTeamDataTitle = [gameHomeTeamDatas['数据标题']] + [''] * (numOfCols - 1)  # 子表标题
-        gameHomeTeamSubTableDatas.append([''] * numOfCols) # 空行
-        gameHomeTeamSubTableDatas.append(gameHomeTeamDataTitle)
-        gameHomeTeamDataHeader = gameHomeTeamDatas['数据表头']
-        gameHomeTeamSubTableDatas.append(gameHomeTeamDataHeader)
-        for gameHomeTeamDataItem in gameHomeTeamDatas['数据表项']:
-            gameHomeTeamSubTableDatas.append(gameHomeTeamDataItem)  
-        df = pd.DataFrame(gameHomeTeamSubTableDatas)
-        df.to_csv(finalGameDatasCsvPath, mode='a', header=False, index=False, encoding='utf-8-sig')
+        if gameHomeTeamDatas != None:
+            gameHomeTeamDataTitle = [gameHomeTeamDatas['数据标题']] + [''] * (numOfCols - 1)  # 子表标题
+            gameHomeTeamSubTableDatas.append([''] * numOfCols) # 空行
+            gameHomeTeamSubTableDatas.append(gameHomeTeamDataTitle)
+            gameHomeTeamDataHeader = gameHomeTeamDatas['数据表头']
+            gameHomeTeamSubTableDatas.append(gameHomeTeamDataHeader)
+            for gameHomeTeamDataItem in gameHomeTeamDatas['数据表项']:
+                gameHomeTeamSubTableDatas.append(gameHomeTeamDataItem)  
+            df = pd.DataFrame(gameHomeTeamSubTableDatas)
+            df.to_csv(finalGameDatasCsvPath, mode='a', header=False, index=False, encoding='utf-8-sig')
         gameIdx += 1
 
 
 
 # Main function to scrape all years
 def scrape_nba_finals():
-    skip_year = 20  # 要跳过的年份
+    skip_year = 27  # 要跳过的年份
     fetch_years = 34  # 1990 - 2023 
     # fetch_years = 1  # test 
     html = fetch_html(BASE_URL)
@@ -271,9 +267,9 @@ def scrape_nba_finals():
                 continue
             new_year_url = f"{BASE_URL_Prefix}/{year_url}"
             year_datas,game_datas = parse_singleYear_finalGame(new_year_url)
-            saveGamesDatas2Csv(game_datas)
-            temp = 1
+            # saveGamesDatas2Csv(game_datas)
             # saveYearDatas2Csv(year_datas)
+            temp = 1
     
     temp = 1
 

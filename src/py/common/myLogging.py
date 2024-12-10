@@ -5,11 +5,10 @@ import logging,os
 # 项目根目录
 project_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-turnOnNBAStatisCrawler = False
+turnOnNBAStatisCrawler = True
 
 
 # //////////////////////////////////////////////////////////////  NBAStatisCrawlerLogging  //////////////////////////////////////////////////////////////
-
 logging_output_dir = os.path.join(project_root_dir,"outputs","NBAFinalsStatisticCrawler","loggings")
 
 os.makedirs(logging_output_dir, exist_ok=True)
@@ -18,7 +17,8 @@ os.makedirs(logging_output_dir, exist_ok=True)
 NBAStatisCrawlerLogging_file_path = os.path.join(logging_output_dir,"NBAStatisCrawlerLogging.txt")
 
 loggerNBAStatisCrawler = logging.getLogger('NBAStatisCrawlerLogger')
-loggerNBAStatisCrawler.setLevel(logging.INFO)
+# loggerNBAStatisCrawler.setLevel(logging.INFO)
+loggerNBAStatisCrawler.setLevel(logging.WARNING)
 NBAStatisCrawlerFormatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
 NBAStatisCrawlerFileHandler = logging.FileHandler(NBAStatisCrawlerLogging_file_path,mode='w')
@@ -41,9 +41,11 @@ def logNBAStatisCrawler(mode: str ='i',preFix: str = '',content:str = ''):
         raise Exception("Invalid Parameters for logNBAStatisCrawler!")
     
     if mode == 'i':
-        loggerNBAStatisCrawler.info("NBAStatisCrawlerLogger")
+        loggerNBAStatisCrawler.info(f"{preFix}: {content}")
+    elif mode == 'w':
+        loggerNBAStatisCrawler.warning(f"{preFix}: {content}")
     elif mode == 'e':
-        loggerNBAStatisCrawler.error("NBAStatisCrawlerLogger")
+        loggerNBAStatisCrawler.error(f"{preFix}: {content}")
     else: 
         raise Exception("Invalid Parameters for logNBAStatisCrawler!")
         
