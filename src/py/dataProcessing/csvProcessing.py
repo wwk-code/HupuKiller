@@ -61,7 +61,8 @@ class NBAFinalAverageDataCsvProcessor():
 
         # 根据 assets/sft/SFTQATemplate.json 中的  nbaFinalAverageData_QA_template_1 构造对应SFT QA对
         def constructNbaFinalAverageDataQATemplate_1(datas:dict):
-            SFTQATemplateFilePath = os.path.join(project_root_dir,"assets","sft","SFTQATemplate.json")
+            # SFTQATemplateFilePath = os.path.join(project_root_dir,"assets","sft","SFTQATemplate.json")   # project output dir
+            SFTQATemplateFilePath = "/data/workspace/projects/llamaLearn/LLaMA-Factory/data/HupuKiller/SFTQATemplate.json"  # llamafaFactory data dir
             jsonContent = loadJsonFile(SFTQATemplateFilePath)
             year = datas['year']
             headers = datas['headers']

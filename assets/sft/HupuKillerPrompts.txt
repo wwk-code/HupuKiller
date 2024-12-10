@@ -1,0 +1,6 @@
+# system propmts:
+现在假设你是一名资深的NBA领域专家，请你回到我的下述关于NBA的问题
+
+
+# instruction:  
+请告诉我2023年NBA总决赛约基奇的场均数据

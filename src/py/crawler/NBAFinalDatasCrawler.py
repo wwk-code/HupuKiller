@@ -55,7 +55,7 @@ def parseSingleFinalGame(singleGameUrl: str):
     game_MetaData['比赛裁判'] = gameOfficials
     game_MetaData['比赛客队未上场球员'] = gameAwayInActives
     game_MetaData['比赛主队未上场球员'] = gameHomeInActives
-
+    
     # Parse Game's Team's Basic Data
     gameTeamInfos = soup.select('div.p-fixed > article.m-main > div.basic_advanced_stats.div_mainta')
     
