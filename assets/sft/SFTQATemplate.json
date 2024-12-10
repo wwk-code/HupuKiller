@@ -1,0 +1,7 @@
+{
+    "nbaFinalAverageData_QA_template_1": {
+        "instruction": "请告诉我某位球员在某年NBA总决赛的场均数据",
+        "input": "球员: {player}, 年份: {year}",
+        "output": "{player} 在 {year} 年 NBA 总决赛的场均数据如下: {datas}"
+    }    
+}
