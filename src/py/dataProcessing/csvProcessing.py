@@ -51,56 +51,84 @@ class NBAFinalAverageDataCsvProcessor():
             averageFinalGameDatas.append({"winner" : winnerDatasDict,"loser" : loserDatasDict})
             
         return averageFinalGameDatas
-        
-        
+    
 
-    def exportAverageFinalGameDatas2SftJson(self,averageFinalGameDatas: list):
-        
-        # 输出SFTQA对文件路径
-        outputSFTQAFilePath = os.path.join(project_root_dir,"outputs","SFTDatas","NBAFinalAverageDatasQA.json")
 
-        # 根据 assets/sft/SFTQATemplate.json 中的  nbaFinalAverageData_QA_template_1 构造对应SFT QA对
-        def constructNbaFinalAverageDataQATemplate_1(datas:dict):
-            # SFTQATemplateFilePath = os.path.join(project_root_dir,"assets","sft","SFTQATemplate.json")   # project output dir
-            SFTQATemplateFilePath = "/data/workspace/projects/llamaLearn/LLaMA-Factory/data/HupuKiller/SFTQATemplate.json"  # llamafaFactory data dir
-            jsonContent = loadJsonFile(SFTQATemplateFilePath)
-            year = datas['year']
-            headers = datas['headers']
-            items = datas['items']
-            nbaFinalAverageDataQATemplates = []
-            rwaNbaFinalAverageDataQATemplate = jsonContent['nbaFinalAverageData_QA_template_1']
-            for item in items:
-                nbaFinalAverageDataQATemplate = rwaNbaFinalAverageDataQATemplate.copy()
-                datasTemplate = ""
-                for i in range(1,len(item)):
-                    seperator = ' , ' if i != len(item) - 1 else '.'
-                    datasTemplate = datasTemplate + headers[i] + " : " + item[i] + seperator
-                fillData = {
-                    "player" : item[0],
-                    "year" : year,
-                    "datas" : datasTemplate
-                }
-                nbaFinalAverageDataQATemplate['input'] = nbaFinalAverageDataQATemplate['input'].format(**fillData)
+    '''
+        根据 assets/sft/SFTQATemplate.json 中的  nbaFinalAverageData_QA_template_1 构造对应SFT QA对
+        构造出的数据形式如下(当前已验证此种数据形式容易导致模型出现幻觉):
+    '''
+    def constructNbaFinalAverageDataQATemplate_1(self,datas:dict):
+        SFTQATemplateFilePath = os.path.join(project_root_dir,"assets","sft","SFTQATemplate.json")   # project output dir
+        # SFTQATemplateFilePath = "/data/workspace/projects/llamaLearn/LLaMA-Factory/data/HupuKiller/SFTQATemplate.json"  # llamafaFactory data dir
+        jsonContent = loadJsonFile(SFTQATemplateFilePath)
+        year = datas['year']
+        headers = datas['headers']
+        items = datas['items']
+        nbaFinalAverageDataQATemplates = []
+        rawNbaFinalAverageDataQATemplate = jsonContent['nbaFinalAverageData_QA_template_1']
+
+        for item in items:
+            player, yearsOld, playTime, point, playground, assist, steal, block = item
+            # 目前构造五条含有不同的instructions的每个球员的总决赛历史数据SFT QA对
+            Instructions = [
+                f"{player}在{year}年NBA总决赛的场均数据是多少？",
+                f"请告诉我{year}年NBA总决赛中{player}的场均数据",
+                f"{year}年NBA总决赛，{player}的数据表现怎么样",
+                f"在{year}年NBA总决赛中，{player}的平均统计数据是什么",
+                f"{player}在{year}年NBA总决赛的表现如何？请给出他的场均数据。"
+            ]
+            fillData = {
+                "instruction" : "",
+                "player" : player,
+                "yearsOld": yearsOld,
+                "playTime" : playTime,
+                "point" : point,
+                "playground" : playground,
+                "assist" : assist,
+                "steal" : steal,
+                "block" : block
+            }
+            for Instruction in Instructions:
+                nbaFinalAverageDataQATemplate = rawNbaFinalAverageDataQATemplate.copy()
+                fillData['instruction'] = Instruction
+                nbaFinalAverageDataQATemplate['instruction'] = nbaFinalAverageDataQATemplate['instruction'].format(**fillData)
                 nbaFinalAverageDataQATemplate['output'] = nbaFinalAverageDataQATemplate['output'].format(**fillData)
+
                 nbaFinalAverageDataQATemplates.append(nbaFinalAverageDataQATemplate)
 
-            return nbaFinalAverageDataQATemplates
+        return nbaFinalAverageDataQATemplates        
+    
 
+    def exportAverageFinalGameDatas2SftJson(self,averageFinalGameDatas: list):
+        # 输出SFTQA对文件路径
+        # outputSFTQAFilePath = os.path.join(project_root_dir,"outputs","SFTDatas","NBAFinalAverageDatasQA.json")
+        outputSFTQAFilePath = "/data/workspace/projects/llamaLearn/LLaMA-Factory/data/HupuKiller/NBAFinalAverageDatasQA.json"
         refreashFile(outputSFTQAFilePath)
-
         for averageFinalGameData in averageFinalGameDatas:
             winnerData = averageFinalGameData['winner']
             loserData = averageFinalGameData['loser']
-
-            nbaFinalWinnerAverageDataQATemplates = constructNbaFinalAverageDataQATemplate_1(winnerData)
-            nbaFinalLoserAverageDataQATemplates = constructNbaFinalAverageDataQATemplate_1(loserData)
-
+            nbaFinalWinnerAverageDataQATemplates = self.constructNbaFinalAverageDataQATemplate_1(winnerData)
+            nbaFinalLoserAverageDataQATemplates = self.constructNbaFinalAverageDataQATemplate_1(loserData)
             append_to_json_file(outputSFTQAFilePath,nbaFinalWinnerAverageDataQATemplates)
             append_to_json_file(outputSFTQAFilePath,nbaFinalLoserAverageDataQATemplates)
 
     def extractNBAFinalAverageDatasCsvAndExportQA(self):
         averageFinalGameDatas = self.extractNBAFinalAverageData()
         self.exportAverageFinalGameDatas2SftJson(averageFinalGameDatas)
+
+
+    # 导出回复错误问题的QA对数据
+    def exportFakeNBAFinalAverageDatasCsvAndExportQA(self):
+        FakeSFTQATemplateFilePath = os.path.join(project_root_dir,"assets","sft","SFTQATemplate.json")
+        output_file_path = "/data/workspace/projects/llamaLearn/LLaMA-Factory/data/HupuKiller/FakeNBAFinalAverageDatasQA.json"
+        jsonContent = loadJsonFile(FakeSFTQATemplateFilePath)
+        rawFakeNbaFinalAverageDataQATemplate = jsonContent['FakeNbaFinalAverageData_QA_template_1']
+
+        
+        
+        refreashFile(output_file_path)
+        
 
 
 if __name__ == "__main__":

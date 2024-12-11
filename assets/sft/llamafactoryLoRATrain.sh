@@ -12,7 +12,7 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
     --dataset HupuKiller_NBAFinalAverageDatas \
     --cutoff_len 256 \
     --learning_rate 5e-05 \
-    --num_train_epochs 5.0 \
+    --num_train_epochs 50.0 \
     --max_samples 100000 \
     --per_device_train_batch_size 2 \
     --gradient_accumulation_steps 8 \
@@ -29,7 +29,7 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
     --ddp_timeout 180000000 \
     --optim adamw_torch \
     --lora_rank 16 \
-    --lora_alpha 32 \
+    --lora_alpha 16 \
     --lora_dropout 0.05 \
     --lora_target all \
     --overwrite_output_dir \
@@ -50,7 +50,7 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
     --dataset HupuKiller_NBAFinalAverageDatas \
     --cutoff_len 256 \
     --learning_rate 5e-05 \
-    --num_train_epochs 5.0 \
+    --num_train_epochs 50.0 \
     --max_samples 100000 \
     --per_device_train_batch_size 2 \
     --gradient_accumulation_steps 8 \
@@ -61,16 +61,19 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
     --warmup_steps 0 \
     --packing False \
     --report_to none \
-    --output_dir saves/Llama-3-8B-Chinese-Chat/lora/HupuKillerNBAFinalAverageSFT_1 \
+    --output_dir saves/Llama-3-8B-Chinese-Chat/lora/HupuKillerNBAFinalAverageSFT_0 \
     --bf16 True \
     --plot_loss True \
     --ddp_timeout 180000000 \
     --optim adamw_torch \
     --lora_rank 16 \
-    --lora_alpha 32 \
+    --lora_alpha 16 \
     --lora_dropout 0.05 \
-    --lora_target "q_proj,k_proj,v_proj,down_proj,up_proj" \
+    --lora_target "q_proj,k_proj,v_proj,gate_proj" \
     --overwrite_output_dir \
     --local_rank 0
+    
+
+
 
 # saves/Llama-3-8B-Chinese-Chat/lora/train_2024-12-10-22-15-42

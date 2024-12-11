@@ -245,7 +245,6 @@ def saveGamesDatas2Csv(game_datas: list):
         gameIdx += 1
 
 
-
 # Main function to scrape all years
 def scrape_nba_finals():
     skip_year = 27  # 要跳过的年份
