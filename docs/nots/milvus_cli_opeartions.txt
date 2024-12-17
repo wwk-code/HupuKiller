@@ -1,0 +1,3 @@
+	prefix:   milvus_cli
+    •	连接 Milvus 服务：  connect --host localhost --port 19530
+    ramins: https://milvus.io/docs/cli_commands.md

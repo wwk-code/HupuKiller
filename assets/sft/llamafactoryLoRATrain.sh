@@ -9,10 +9,10 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
     --template llama3 \
     --flash_attn auto \
     --dataset_dir data \
-    --dataset HupuKiller_NBAFinalAverageDatas \
+    --dataset HupuKiller_NBAFinalAverageDatas_Abstract,HupuKiller_NBAFinalAverageDatas_Concise \
     --cutoff_len 256 \
     --learning_rate 5e-05 \
-    --num_train_epochs 50.0 \
+    --num_train_epochs 20.0 \
     --max_samples 100000 \
     --per_device_train_batch_size 2 \
     --gradient_accumulation_steps 8 \

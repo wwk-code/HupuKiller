@@ -1,5 +1,6 @@
 import pandas as pd
 import os,sys,json
+from typing import Union
 
 project_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 py_src_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,6 +27,12 @@ def loadJsonFile(json_file_path):
     return jsonContent
 
 
+def loadJsonTemplate(json_file_path: str,templateItemName: str):
+    jsonContent = loadJsonFile(json_file_path)
+    template = jsonContent[templateItemName]
+    return template
+
+
 def append_to_json_file(file_path, new_data):
     if not os.path.exists(file_path):
         data = []
@@ -38,6 +45,20 @@ def append_to_json_file(file_path, new_data):
     data.extend(new_data)
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+
+
+def writeIterableToFile(filePath,contents):
+    for content in contents:
+        with open(filePath,mode='a',encoding='utf-8') as f:
+            f.write(content+'\n')
+
+
+def readFileContent(filePath):
+    contents = []
+    with open(filePath,mode='r',encoding='utf-8') as f:
+        for line in f:
+            contents.append(line.strip())
+    return contents
 
 # 清空文件内容
 def refreashFile(filePath):
