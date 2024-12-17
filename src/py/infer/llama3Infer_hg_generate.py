@@ -45,11 +45,23 @@ class llama3Infer:
 
     def generate_response(self,inputs: str):
         tokenizedInputs = self.tokenizer(inputs, return_tensors="pt").to(self.device)
+        # 效果还行的参数组合
+        # kwargs = {
+        #     "max_tokens" : 256,
+        #     "do_sample" : True,
+        #     "top_p" : 0.3,
+        #     "temperature" : 0.2,
+        #     "repetition_penalty" : 1.2,  # 惩罚重复
+        #     "bos_token_id" : self.tokenizer.bos_token_id,
+        #     "eos_token_id" : self.tokenizer.eos_token_id
+        #     # "bos_token_id" : self.custom_bos_token_id,
+        #     # "eos_token_id" : self.custom_eos_token_id
+        # }
         kwargs = {
             "max_tokens" : 256,
             "do_sample" : True,
-            "top_p" : 0.3,
-            "temperature" : 0.2,
+            "top_p" : 0.5,
+            "temperature" : 0.5,
             "repetition_penalty" : 1.2,  # 惩罚重复
             "bos_token_id" : self.tokenizer.bos_token_id,
             "eos_token_id" : self.tokenizer.eos_token_id
