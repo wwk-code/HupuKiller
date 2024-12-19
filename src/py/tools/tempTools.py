@@ -11,21 +11,21 @@ from common.myFile import *
 
 def extractJson(jsonFilePath,outputFilePath):
     jsonContents = loadJsonFile(jsonFilePath)
-    inputs = []
+    questions = []
     for i in range(len(jsonContents)):
         jsonContent = jsonContents[i]
         input = jsonContent['input']
-        inputs.append(input)
+        question = input.split('问题:')[1]
+        questions.append(question)
     
     refreashFile(outputFilePath)
-    writeIterableToFile(outputFilePath,inputs)
+    writeIterableToFile(outputFilePath,questions)
     
-    
-    
-
 
 if __name__ == '__main__':
-    jsonFilePath = '/data/workspace/projects/llamaLearn/LLaMA-Factory/data/HupuKiller/NBAFinalAverageDatasQA_concise.json'
-    outputFilePath = '/data/workspace/projects/HupuKiller/outputs/Check/rawLoraCheckInputs.txt'
+    # jsonFilePath = '/data/workspace/projects/llamaLearn/LLaMA-Factory/data/HupuKiller/NBAFinalAverageDatasQA_concise.json'
+    jsonFilePath = os.path.join(project_root_dir,'../','llamaLearn','LLaMA-Factory','data','HupuKiller','NBAFinalAverageDatasQA_concise.json')
+    # outputFilePath = '/data/workspace/projects/HupuKiller/assets/dpo/questions.txt'
+    outputFilePath = os.path.join(project_root_dir,'assets','dpo','questions.txt')
     extractJson(jsonFilePath,outputFilePath)
 

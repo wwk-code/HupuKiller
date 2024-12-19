@@ -2,7 +2,7 @@
 
 **Note:** 关于系统整体技术栈选型、系统全流程设计、系统架构等系统性信息请查看 SysUp2Down.docx 文档
 
-### 1. HupuKiiler - 1st Version系统功能设定:
+### 1. HupuKiiler - 2st Version系统功能设定:
 
 目前对HupuKiller第一版的功能预期设定如下:
 

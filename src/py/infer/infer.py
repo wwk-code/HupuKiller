@@ -29,7 +29,6 @@ class LLAMA3Infer():
         self.llama3Infer.LoRAMergedLlama3InferOnLocalBash()
 
 
-
 if __name__ == '__main__':
     llama3Infer = LLAMA3Infer()
     llama3Infer.execute_llama3Infer_hg_generate_infer()

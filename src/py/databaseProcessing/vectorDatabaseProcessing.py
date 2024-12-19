@@ -88,8 +88,6 @@ class NBAFinalAverageDatasFaissHandler(FaissHandler):
         # faiss.write_index(faiss_index, NBAFinalAverageDataFaissIndexOutputFilePath)
 
 
-
-
 class MilvusHandler:
     def __init__(self, host="localhost", port="19530"):
         self.host = host
