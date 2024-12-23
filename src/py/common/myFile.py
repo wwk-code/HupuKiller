@@ -47,10 +47,10 @@ def append_to_json_file(file_path, new_data):
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def writeIterableToFile(filePath,contents):
+def writeIterableToFile(filePath,contents,startDelimeter: str = '',endDelimeter: str = '\n'):
     for content in contents:
         with open(filePath,mode='a',encoding='utf-8') as f:
-            f.write(content+'\n')
+            f.write(startDelimeter + content + endDelimeter)
 
 
 def readFileContent(filePath):

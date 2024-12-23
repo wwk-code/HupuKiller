@@ -1,8 +1,11 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainingArguments
 from peft import PeftModel
 from datasets import load_dataset
-from trl import DPOTrainer
+from trl import DPOTrainer,DPOConfig,DPOConfig
 import os,sys
+import torch; assert torch.cuda.get_device_capability()[0] >= 8, 'Hardware not supported for Flash Attention'
+from peft import LoraConfig
+import torch
 
 '''
     "instruction": "根据用户问题和背景知识回答问题",
@@ -10,7 +13,6 @@ import os,sys
     "output_positive": "<自定义开始>球员: 迈克尔-乔丹 | 场均出场时间: 44.0分钟 | 年龄: 27岁 | 场均得分: 31.2分 | 场均篮板: 6.6个 | 场均助攻: 11.4次 | 场均抢断: 2.8次 | 场均盖帽: 1.4次<自定义结束>",
     "output_negative": "乔丹很强，1991年总决赛的场均数据非常优秀。"
 '''
-
 
 # 项目根目录
 project_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -27,69 +29,143 @@ gpu_device_0 = "cuda:0"
 gpu_device_1 = "cuda:1"
 
 
-class DPO:
+torch.set_num_threads(14) # 最多分配14个线程给此脚本
+
+
+class DPO_handler:
     def __init__(self):
-        self.strategy_model = AutoModelForCausalLM.from_pretrained(nba_final_average_qa_loraMerged_output_path, torch_dtype=torch.bfloat16).to(gpu_device_0)  # LoRA合并后的模型
-        self.tokenizer = AutoTokenizer.from_pretrained(nba_final_average_qa_loraMerged_output_path)
-        #参考模型，冻结权重
-        self.ref_model = AutoModelForCausalLM.from_pretrained(nba_final_average_qa_loraMerged_output_path, device_map=gpu_device_1)
-        self.ref_model.eval()
-      
 
-# 加载数据集
-data_path = "dpo_data.json"
-dataset = load_dataset("json", data_files=data_path)
+        # self.tokenizer = AutoTokenizer.from_pretrained(nba_final_average_qa_loraMerged_output_path)
+        self.tokenizer = AutoTokenizer.from_pretrained(base_model_path)
+        self.tokenizer.pad_token = self.tokenizer.eos_token
+        self.tokenizer.padding_side = 'left'
+        self.tokenizer.truncation_side = 'left'
+        
+        # 加载DPO数据集
+        data_path = os.path.join(project_root_dir,'assets','dpo','dpoDataItems.json')
+        self.dataset = load_dataset("json", data_files=data_path)['train'] # 流式加载数据集，减小主机内存消耗
+        
+        # 数据预处理
+        self.dataset = self.dataset.map(self.preprocess_data, batched=True,remove_columns=self.dataset.features)
+        eval_datasets_weight = 0.25
+        self.datasetDict = self.dataset.train_test_split(test_size=eval_datasets_weight)  # eval datasize takes up 1/4
+        self.train_dataset,self.test_dataset = self.datasetDict['train'],self.datasetDict['test']
+        
+        # BitsAndBytesConfig int-4 config
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True, bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16  # 4bit
+        )
 
-# 预处理数据：Tokenize
-def preprocess_data(examples):
-    """
-    将 instruction + input 拼接，并分别对正样本和负样本进行 tokenization
-    """
-    inputs = [
-        f"{instruction}\n\n{input_text}"
-        for instruction, input_text in zip(examples["instruction"], examples["input"])
-    ]
-    positive_outputs = examples["output_positive"]
-    negative_outputs = examples["output_negative"]
+        # bnb_config = BitsAndBytesConfig(
+        #     load_in_8bit=True,  # 启用 8bit 量化
+        #     llm_int8_threshold=6.0,  # 阈值，用于区分大权重和小权重的处理
+        #     llm_int8_skip_modules=None,  # 跳过量化的模块（如果需要精细控制）
+        #     llm_int8_enable_fp32_cpu_offload=False,  # 是否将 FP32 权重卸载到 CPU
+        #     llm_int8_has_fp16_weight=False,  # 权重是否已经以 FP16 加载
+        # )
 
-    tokenized_inputs = tokenizer(inputs, padding="max_length", truncation=True, max_length=512, return_tensors="pt")
-    tokenized_pos = tokenizer(positive_outputs, padding="max_length", truncation=True, max_length=512, return_tensors="pt")
-    tokenized_neg = tokenizer(negative_outputs, padding="max_length", truncation=True, max_length=512, return_tensors="pt")
+        self.model = AutoModelForCausalLM.from_pretrained(
+            # nba_final_average_qa_loraMerged_output_path, 
+            base_model_path,  # 原始模型路径 
+            use_cache=False,  # Turn on KV-Cache
+            attn_implementation="flash_attention_2",  # using Flash-Attention
+            device_map=gpu_device_0,
+            torch_dtype=torch.bfloat16, 
+            quantization_config=bnb_config,
+        )
+        
+        lora_output_path = '/data/workspace/projects/llamaLearn/LLaMA-Factory/saves/Llama-3-8B-Chinese-Chat/lora/HupuKillerNBAFinalAverageSFT_abstract_and_concise_epoch30'
+        self.training_adapter_name = 'training_adapter'
+        self.reference_adapter_name = 'reference_adapter'
+        self.model.load_adapter(lora_output_path,self.training_adapter_name)
+        self.model.load_adapter(lora_output_path,self.reference_adapter_name)
 
-    return {
-        "input_ids": tokenized_inputs["input_ids"],
-        "attention_mask": tokenized_inputs["attention_mask"],
-        "labels_positive": tokenized_pos["input_ids"],
-        "labels_negative": tokenized_neg["input_ids"],
-    }
+        self.lora_target_modules = ['gate_proj','up_proj','down_proj',"q_proj",'v_proj','k_proj']
+        
+        self.peft_config = LoraConfig(
+            lora_alpha=128,
+            lora_dropout=0.05,
+            r=256,
+            bias="none",
+            # target_modules="all-linear",
+            target_modules=self.lora_target_modules,
+            task_type="CAUSAL_LM",
+        )
 
-# 数据预处理
-tokenized_dataset = dataset.map(preprocess_data, batched=True)
+        # self.args = TrainingArguments(
+        self.args = DPOConfig(
+            output_dir=os.path.join(project_root_dir,'outputs','DPO'),               # directory to save and repository id
+            num_train_epochs=1000,                     # number of training epochs
+            per_device_train_batch_size=1,         # batch size per device during training
+            per_device_eval_batch_size=1,           # batch size for evaluation
+            gradient_accumulation_steps=1,          # number of steps before performing a backward/update pass
+            gradient_checkpointing=True,            # use gradient checkpointing to save memory
+            optim="adamw_torch_fused",              # use fused adamw optimizer
+            learning_rate=5e-5,                     # 10x higher LR than QLoRA paper
+            max_grad_norm=0.3,                      # max gradient norm based on QLoRA paper
+            warmup_ratio=0.1,                       # warmup ratio based on QLoRA paper
+            lr_scheduler_type="cosine",             # use cosine learning rate scheduler
+            logging_steps=25,                       # log every 25 steps
+            save_steps=500,                         # when to save checkpoint
+            save_total_limit=2,                     # limit the total amount of checkpoints
+            evaluation_strategy="steps",            # evaluate every 1000 steps
+            eval_steps=700,                         # when to evaluate
+            bf16=True,                              # use bfloat16 precision
+            tf32=True,                              # use tf32 precision
+            push_to_hub=False,                      # push model to hub
+            report_to="tensorboard",                # report mestrics to tensorboard
+        )
+    
+        self.dpo_args = {
+            "beta": 0.1,                        # KL-Divergency hyper-param, The beta factor in DPO loss. Higher beta means less divergence
+            "loss_type": "sigmoid",              # The loss type for DPO.
+            'max_length': 256,
+            'max_prompt_length' : 128
+        }
 
 
+        self.trainer = DPOTrainer(
+            self.model,
+            model_adapter_name=self.training_adapter_name,
+            ref_adapter_name=self.reference_adapter_name,
+            peft_config=self.peft_config,
+            args=self.args,
+            train_dataset=self.train_dataset,
+            eval_dataset=self.test_dataset,
+            tokenizer=self.tokenizer,
+            max_length=self.dpo_args['max_length'],
+            max_prompt_length=self.dpo_args['max_prompt_length'],
+            beta=self.dpo_args["beta"],
+            loss_type=self.dpo_args["loss_type"],
+        )
+        
+        temp = 1
 
-# 配置 DPOTrainer
-dpo_trainer = DPOTrainer(
-    model=model,
-    ref_model=ref_model,
-    tokenizer=tokenizer,
-    train_dataset=tokenized_dataset["train"],
-    eval_dataset=tokenized_dataset["test"],
-    max_length=512,
-    logging_dir="./logs",  # 日志目录
-    per_device_train_batch_size=4,
-    per_device_eval_batch_size=4,
-    learning_rate=5e-5,
-    num_train_epochs=3,
-    weight_decay=0.01,
-    beta=0.1,  # KL 散度正则化的权重
-    output_dir="./dpo_outputs"  # 输出目录
-)
+    # 修正 preprocess_data 函数
+    def preprocess_data(self, examples):
+        """
+        将 instruction + input 拼接，并分别对正样本和负样本进行 tokenization
+        """
+        inputs = [
+            f"{instruction}\n\n{input_text}"
+            for instruction, input_text in zip(examples["instruction"], examples["input"])
+        ]
+        positive_outputs = examples["output_positive"]
+        negative_outputs = examples["output_negative"]
 
-# 开始训练
-dpo_trainer.train()
-
-# 保存模型
-dpo_trainer.save_model(output_dir="./dpo_trained_model")
+        return {
+            'prompt' : inputs,
+            'chosen' : positive_outputs,
+            'rejected' : negative_outputs
+        }
 
 
+    def do_train(self):
+        self.trainer.train()
+        self.trainer.save_model()
+    
+
+
+if __name__ == '__main__':
+    dpo_handler = DPO_handler()
+    dpo_handler.do_train()
