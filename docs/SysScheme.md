@@ -12,19 +12,23 @@
 
 数据库Pipeline搭建(Mysql + Milvus),编写了对应的封装类代码
 
+使用DPO对模型针对NBA总决赛球员平均数据的输出做规约化处理(符合自定义的结构)
+
 **TODO：**
 
 **Prior:**
 
-使用RLHF对模型输出做规约化处理(符合自定义的结构)  
+将现有的RAG系统迁移至 langchain 框架
 
-搭建RAG系统,实现检索知识库并生成模型回复内容
+模型部署迁移至VLLM
 
-搭建简易chatbot应用
+**3st Version TODO：**
 
 训练一个NLU分类模型,协助生成LLAMA的inputs
 
-用TensorRT部署部署NLU模型,VLLM部署LLama
+用TensorRT部署部署NLU模型,
+
+搭建简易chatbot应用
 
 **Common:**
 
