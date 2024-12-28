@@ -41,16 +41,16 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
 CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
     --stage sft \
     --do_train True \
-    --model_name_or_path /root/.cache/huggingface/hub/models--shenzhi-wang--Llama3-8B-Chinese-Chat/snapshots/f25f13cb2571e70e285121faceac92926b51e6f5 \
+    --model_name_or_path /data/workspace/projects/HupuKiller/outputs/LoraMerged/NBAFinalAverageDatas \
     --preprocessing_num_workers 16 \
     --finetuning_type lora \
     --template llama3 \
     --flash_attn auto \
     --dataset_dir data \
-    --dataset HupuKiller_NBAFinalAverageDatas \
+    --dataset DPOAlign_LoRA_NBAFinalAverageDatas \
     --cutoff_len 256 \
     --learning_rate 5e-05 \
-    --num_train_epochs 50.0 \
+    --num_train_epochs 10.0 \
     --max_samples 100000 \
     --per_device_train_batch_size 2 \
     --gradient_accumulation_steps 8 \
@@ -61,7 +61,7 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
     --warmup_steps 0 \
     --packing False \
     --report_to none \
-    --output_dir saves/Llama-3-8B-Chinese-Chat/lora/HupuKillerNBAFinalAverageSFT_0 \
+    --output_dir saves/Llama-3-8B-Chinese-Chat/lora/DPOAlign_LoRA_NBAFinalAverageDatas \
     --bf16 True \
     --plot_loss True \
     --ddp_timeout 180000000 \
@@ -75,5 +75,3 @@ CUDA_VISIBLE_DEVICES=0 llamafactory-cli train \
     
 
 
-
-# saves/Llama-3-8B-Chinese-Chat/lora/train_2024-12-10-22-15-42

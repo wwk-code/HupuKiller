@@ -33,6 +33,14 @@ def loadJsonTemplate(json_file_path: str,templateItemName: str):
     return template
 
 
+def write_list_of_dicts_to_json(file_path,data: list[dict]):
+    with open(file_path, 'w', encoding='utf-8') as json_file:
+        json.dump(data, json_file, ensure_ascii=False, indent=4)
+    print(f"数据成功写入到 {file_path}")
+
+
+
+
 def append_to_json_file(file_path, new_data):
     if not os.path.exists(file_path):
         data = []

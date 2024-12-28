@@ -6,6 +6,8 @@ import os,sys
 import torch; assert torch.cuda.get_device_capability()[0] >= 8, 'Hardware not supported for Flash Attention'
 from peft import LoraConfig
 import torch
+import logging
+from transformers import TrainerCallback
 
 '''
     "instruction": "根据用户问题和背景知识回答问题",
@@ -20,7 +22,7 @@ project_root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirna
 py_src_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(py_src_root_dir)
 
-from infer.llama3Infer_hg_generate import *
+# from infer.llama3Infer_hg_generate import *
 from common.myFile import *
 from common.myCustomPath import *
 
@@ -35,60 +37,76 @@ torch.set_num_threads(14) # 最多分配14个线程给此脚本
 class DPO_handler:
     def __init__(self):
 
+        # 初始化日志记录器
+        log_file_path = os.path.join(project_root_dir, "outputs","DPO", "DPO_NABFinalAverageDatas" , "training.log")
+
+        # 配置 TensorBoard logging
+        # self.tb_callback = TensorBoardCallback()
+
         self.tokenizer = AutoTokenizer.from_pretrained(nba_final_average_qa_loraMerged_output_path)
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.tokenizer.padding_side = 'left'
         self.tokenizer.truncation_side = 'left'
-
-
+        
         # 加载DPO数据集
+        
         data_path = os.path.join(project_root_dir,'assets','dpo','dpoDataItems.json')
         self.dataset = load_dataset("json", data_files=data_path)['train'] # 流式加载数据集，减小主机内存消耗
-        
+        total_length = len(self.dataset)
+        data_num = 4
+        # self.dataset = self.dataset.select(range(total_length - data_num, total_length))  # 剪裁训练数据
         # 数据预处理
         self.dataset = self.dataset.map(self.preprocess_data, batched=True,remove_columns=self.dataset.features)
-        self.datasetDict = self.dataset.train_test_split(test_size=0.25)  # eval datasize takes up 1/4
-        self.train_dataset,self.test_dataset = self.datasetDict['train'],self.datasetDict['test']
-        temp = 1
-
         eval_datasets_weight = 0.25
-
+        self.datasetDict = self.dataset.train_test_split(test_size=eval_datasets_weight)  # eval datasize takes up 1/4
+        self.train_dataset,self.test_dataset = self.datasetDict['train'],self.datasetDict['test']
+        
         # BitsAndBytesConfig int-4 config
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True, bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16  # 4bit
-        )
-
+        # bnb_config = None
         # bnb_config = BitsAndBytesConfig(
-        #     load_in_8bit=True,  # 启用 8bit 量化
-        #     llm_int8_threshold=6.0,  # 阈值，用于区分大权重和小权重的处理
-        #     llm_int8_skip_modules=None,  # 跳过量化的模块（如果需要精细控制）
-        #     llm_int8_enable_fp32_cpu_offload=False,  # 是否将 FP32 权重卸载到 CPU
-        #     llm_int8_has_fp16_weight=False,  # 权重是否已经以 FP16 加载
+        #     load_in_4bit=True, bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16  # 4bit
         # )
+
+        bnb_config = BitsAndBytesConfig(
+            load_in_8bit=True,  # 启用 8bit 量化
+            llm_int8_threshold=6.0,  # 阈值，用于区分大权重和小权重的处理
+            llm_int8_skip_modules=None,  # 跳过量化的模块（如果需要精细控制）
+            llm_int8_enable_fp32_cpu_offload=False,  # 是否将 FP32 权重卸载到 CPU
+            llm_int8_has_fp16_weight=False,  # 权重是否已经以 FP16 加载
+        )
 
         self.model = AutoModelForCausalLM.from_pretrained(
             nba_final_average_qa_loraMerged_output_path, 
+            # base_model_path,  # 原始模型路径 
             use_cache=False,  # Turn on KV-Cache
             attn_implementation="flash_attention_2",  # using Flash-Attention
             device_map=gpu_device_0,
             torch_dtype=torch.bfloat16, 
-            quantization_config=bnb_config
+            quantization_config=bnb_config,
         )
+        
+        # lora_output_path = os.path.join(project_root_dir,'outputs','SFT','LoRAForDPO_NABFinalAverageDatas')
+        lora_output_path = '/data/workspace/projects/llamaLearn/LLaMA-Factory/saves/Llama-3-8B-Chinese-Chat/lora/DPOAlign_LoRA_NBAFinalAverageDatas'
+        self.training_adapter_name = 'training_adapter'
+        self.reference_adapter_name = 'reference_adapter'
+        self.model.load_adapter(lora_output_path,self.training_adapter_name)
+        self.model.load_adapter(lora_output_path,self.reference_adapter_name)
 
+        self.lora_target_modules = ['q_proj','k_proj','v_proj','gate_proj']
+        
         self.peft_config = LoraConfig(
-            lora_alpha=128,
+            lora_alpha=16,
             lora_dropout=0.05,
-            r=256,
+            r=16,
             bias="none",
-            target_modules="all-linear",
+            target_modules=self.lora_target_modules,
             task_type="CAUSAL_LM",
         )
 
-        # self.args = TrainingArguments(
         self.args = DPOConfig(
-            output_dir=os.path.join(project_root_dir,'outputs','DPO'),               # directory to save and repository id
-            num_train_epochs=1000,                     # number of training epochs
-            per_device_train_batch_size=1,         # batch size per device during training
+            output_dir=os.path.join(project_root_dir,'outputs','DPO','DPO_NABFinalAverageDatas'),               # directory to save and repository id
+            num_train_epochs=5,                   # number of training epochs
+            per_device_train_batch_size=1,          # batch size per device during training
             per_device_eval_batch_size=1,           # batch size for evaluation
             gradient_accumulation_steps=1,          # number of steps before performing a backward/update pass
             gradient_checkpointing=True,            # use gradient checkpointing to save memory
@@ -105,7 +123,8 @@ class DPO_handler:
             bf16=True,                              # use bfloat16 precision
             tf32=True,                              # use tf32 precision
             push_to_hub=False,                      # push model to hub
-            report_to="tensorboard",                # report metrics to tensorboard
+            logging_dir=os.path.join(project_root_dir,'outputs','DPO','DPO_NABFinalAverageDatas'),
+            report_to="tensorboard",                # report mestrics to tensorboard
         )
     
         self.dpo_args = {
@@ -118,7 +137,8 @@ class DPO_handler:
 
         self.trainer = DPOTrainer(
             self.model,
-            ref_model=None, # set to none since we use peft
+            model_adapter_name=self.training_adapter_name,
+            ref_adapter_name=self.reference_adapter_name,
             peft_config=self.peft_config,
             args=self.args,
             train_dataset=self.train_dataset,
@@ -129,6 +149,7 @@ class DPO_handler:
             beta=self.dpo_args["beta"],
             loss_type=self.dpo_args["loss_type"],
         )
+        
 
     # 修正 preprocess_data 函数
     def preprocess_data(self, examples):
@@ -152,8 +173,6 @@ class DPO_handler:
     def do_train(self):
         self.trainer.train()
         self.trainer.save_model()
-    
-
 
 
 if __name__ == '__main__':
