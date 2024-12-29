@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM,LlamaForCausalLM
 from peft import PeftModel, PeftConfig
 import torch
-import os,sys
+import os,sys, threading
 from tqdm import tqdm
 
 
@@ -76,61 +76,19 @@ class llama3Infer:
         
         return self.tokenizer.decode(outputs[0], skip_special_tokens=False)
 
-    # 基座模型的本地推理
-    def rawLlama3InferOnLocalBash(self,inputs: str = None):
+    # 针对原始的用户输入进行推理
+    def llama3InferForUserInputs(self,userInputs: str = None):
         # inputs = '背景知识：球员: 尼古拉-约基奇 | 场均出场时间: 41.2分钟 | 年龄: 27岁 | 场均得分: 30.2分 | 场均篮板: 14.0个 | 场均助攻: 7.2次 | 场均抢断: 0.8次 | 场均盖帽: 1.4次。问题:2023年NBA总决赛尼古拉-约基奇的场均数据是多少？'
         instruction = '根据用户问题和背景知识回答问题'
-        userInputs = f"{instruction} ; {inputs}"
-        response = self.generate_response(userInputs,**self.kwargs)
-        # print(f'response:\n{response}')
-        return response
-
-
-    # LoRA-Merged模型的本地推理
-    def LoRAMergedLlama3InferOnLocalBash(self):
-        instruction = '根据用户问题和背景知识回答问题'
-        userInputs = ""
-
-        while(userInputs != 'exit' or userInputs != 'quit' ):
-            # os.system('clear')
-            userInputs = input('请输入问题：')
-            newUserInputs = adaptNBAFinalAverageDatasUserInputsWithDB(userInputs)
-            modelInputs = f"{instruction} ; {newUserInputs}"
-            response = self.generate_response(modelInputs)
-            # print(f'response:\n{response}')
-            if '抱歉' not in response:
-                processed_response = response.split(self.custom_bos_token)[1].strip().split(self.custom_eos_token)[0].strip()
-            else:
-                processed_response = "抱歉,我无法回答你这个问题，我的知识库中没有定位到对应信息"
-            print(f'{processed_response}')
-
-    # 根据用户输入的问题回答
-    def LoRAMergedLlama3InferForQuestion(self,userInputs: str) -> str:
-        instruction = '根据用户问题和背景知识回答问题'
-        newUserInputs = adaptNBAFinalAverageDatasUserInputsWithDB(userInputs)
-        modelInputs = f"{instruction} ; {newUserInputs}"
-        response = self.generate_response(modelInputs)
-
-        # if '抱歉' not in response:
-        #     processed_response = response.split(self.custom_bos_token)[1].strip().split(self.custom_eos_token)[0].strip()
-        # else:
-        #     processed_response = "抱歉,我无法回答你这个问题，我的知识库中没有定位到对应信息"
-        # return processed_response
-        
+        prompts = f"{instruction} ; {userInputs}"
+        response = self.generate_response(prompts,**self.kwargs)
         return response
     
-
-    # 根据预先制定的完整模型input回答
-    def LoRAMergedLlama3InferForInput(self,userInput: str) -> str:
-
-        response = self.generate_response(userInput)
-
-        # if '抱歉' not in response:
-        #     processed_response = response.split(self.custom_bos_token)[1].strip().split(self.custom_eos_token)[0].strip()
-        # else:
-        #     processed_response = "抱歉,我无法回答你这个问题，我的知识库中没有定位到对应信息"
-        # return processed_response
-        
+    
+    # 针对完整的prompts进行推理
+    def llama3InferForPrompts(self,prompts: str = None):
+        # inputs = '背景知识：球员: 尼古拉-约基奇 | 场均出场时间: 41.2分钟 | 年龄: 27岁 | 场均得分: 30.2分 | 场均篮板: 14.0个 | 场均助攻: 7.2次 | 场均抢断: 0.8次 | 场均盖帽: 1.4次。问题:2023年NBA总决赛尼古拉-约基奇的场均数据是多少？'
+        response = self.generate_response(prompts,**self.kwargs)
         return response
 
     
@@ -157,8 +115,21 @@ class llama3Infer:
         refreashFile(outputsFilePath)
         writeIterableToFile(outputsFilePath,testOutuputs)
 
+# 线程安全的 llama3Infer变量
+class ThreadSafeLlama3Infer():
+    
+    def __init__(self):
+        self.llama3_infer = llama3Infer()
+        self.lock = threading.Lock()
+
+    def infer(self, prompt: str):
+        # 使用锁确保同一时刻只有一个线程能够进行推理
+        with self.lock:
+            return self.llama3_infer.llama3InferForPrompts(prompt)
+
+
 if __name__ == '__main__':
-    llama3Infer = llama3Infer()
+    llama3_infer = llama3Infer()
     temp = 1
     # llama3Infer.rawLlama3InferOnLocalBash(inputs)
     # llama3Infer.LoRAMergedLlama3InferCheck()

@@ -18,9 +18,9 @@
 
 **Prior:**
 
-将现有的RAG系统迁移至 langchain 框架
+将现有的RAG系统迁移至 langchain 框架,包括: 用langchain API封装模型类、数据库操作Tool、PromptTemplate等，构造Chain、Agent，跑通同步逻辑验证后，集成异步逻辑的验证
 
-模型部署迁移至VLLM
+将模型推理逻辑迁移至VLLM
 
 **3st Version TODO：**
 

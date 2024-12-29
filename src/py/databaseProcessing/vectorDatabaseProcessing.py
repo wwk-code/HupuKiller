@@ -37,6 +37,7 @@ class FaissHandler():
 
 class NBAFinalAverageDatasFaissHandler(FaissHandler):
 
+
     def __init__(self):
         super().__init__()
         self.mysqlNBAFinalAverageDatasHandler = MysqlNBAFinalAverageDatasHandler()
@@ -53,39 +54,6 @@ class NBAFinalAverageDatasFaissHandler(FaissHandler):
         for queryData in queryDatas:
             question = f"{queryData['year']}年NBA总决赛{queryData['player']}的场均数据是多少？"
             questionEmbedding = self.model.encode(question)
-
-            # self.faiss_index.add_with_ids(embedding.reshape(1, -1), np.array([self.vectorId]).astype(np.int64))
-
-
-        # userQuestions = []
-
-        # for queryData in queryDatas:
-            
-        #     question = f"{queryData['year']}年NBA总决赛{queryData['player']}的场均数据是多少？"
-        #     userQuestions.append(question)
-        #     embedding = model.encode(question)  
-            
-        #     vector_id = queryData["id"]  # 使用数据中的 ID 作为也向量 ID
-            
-            
-        #     metadata_store[vector_id] = (MYSQL_DATABASE_NAME, MYSQL_TABLE_NAMES[0], vector_id)
-
-        # for test_question in userQuestions:
-        #     query_embedding = model.encode(test_question).reshape(1, -1)
-        #     k = 1
-        #     distances, indices = faiss_index.search(query_embedding, k)
-        #     if indices[0][0] != -1:  # 如果检索到结果
-        #         vector_id = indices[0][0]
-        #         database, table, record_id = metadata_store[vector_id]
-        #         temp = 1
-        #     else:
-        #         print("未找到相关数据！")
-
-
-        # NBAFinalAverageDataFaissIndexOutputFilePath = f"{project_root_dir}/outputs/VectorDB/NBAFinalAverageData.index"
-
-        # # 保存索引到磁盘
-        # faiss.write_index(faiss_index, NBAFinalAverageDataFaissIndexOutputFilePath)
 
 
 class MilvusHandler:
@@ -230,31 +198,6 @@ class MilvusHandler:
             print(f"Collection '{collection_name}' is not loaded.")
             return False
 
-    
-    # # 未验证，明天验证!
-    # def update_metadata(self, collection: Collection, conditions: dict, new_metadata: dict):
-    #     """
-    #         更新数据（通过删除旧数据并插入新数据实现）
-    #         :param collection: Collection 对象
-    #         :param conditions: 更新条件，形如 {"dbId": 123}
-    #         :param new_metadata: 新的元数据，形如 {"status": "active"}
-    #         :return: 无
-    #     """
-    #     # 查询符合条件的数据
-    #     existing_data = self.query_by_metadata(collection, conditions, output_fields=["vector", "dbId"])
-    #     vectors, db_ids = [], []
-    #     for record in existing_data:
-    #         vectors.append(record["vector"])
-    #         db_ids.append(record["dbId"])
-
-    #     # 删除旧数据
-    #     self.delete_by_metadata(collection, conditions)
-
-    #     # 插入新数据
-    #     updated_metadata = [{**new_metadata, "dbId": db_id} for db_id in db_ids]
-    #     self.insert_datas(collection, vectors, updated_metadata)
-    #     print(f"Updated {len(vectors)} records.")
-    
 
 class NBAFinalAverageDatasMilvusHandler():
 
