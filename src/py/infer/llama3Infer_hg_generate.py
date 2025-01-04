@@ -87,7 +87,6 @@ class llama3Infer:
     
     # 针对完整的prompts进行推理
     def llama3InferForPrompts(self,prompts: str = None):
-        # inputs = '背景知识：球员: 尼古拉-约基奇 | 场均出场时间: 41.2分钟 | 年龄: 27岁 | 场均得分: 30.2分 | 场均篮板: 14.0个 | 场均助攻: 7.2次 | 场均抢断: 0.8次 | 场均盖帽: 1.4次。问题:2023年NBA总决赛尼古拉-约基奇的场均数据是多少？'
         response = self.generate_response(prompts,**self.kwargs)
         return response
 
@@ -130,6 +129,7 @@ class ThreadSafeLlama3Infer():
 
 if __name__ == '__main__':
     llama3_infer = llama3Infer()
+
+    prompts = "Please recall custom_tag_2,I need you invoke testTool_2! "
+    response = llama3_infer.llama3InferForPrompts(prompts)
     temp = 1
-    # llama3Infer.rawLlama3InferOnLocalBash(inputs)
-    # llama3Infer.LoRAMergedLlama3InferCheck()

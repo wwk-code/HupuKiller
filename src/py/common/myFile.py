@@ -33,8 +33,10 @@ def loadJsonTemplate(json_file_path: str,templateItemName: str):
     return template
 
 
-def write_list_of_dicts_to_json(file_path,data: list[dict]):
-    with open(file_path, 'w', encoding='utf-8') as json_file:
+def write_list_of_dicts_to_json(file_path:str = None,data: list[dict] = None,mode:str = 'w'):
+    if mode == 'w':
+        refreashFile(file_path)
+    with open(file_path, mode, encoding='utf-8') as json_file:
         json.dump(data, json_file, ensure_ascii=False, indent=4)
     print(f"数据成功写入到 {file_path}")
 
@@ -55,9 +57,11 @@ def append_to_json_file(file_path, new_data):
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def writeIterableToFile(filePath,contents,startDelimeter: str = '',endDelimeter: str = '\n'):
+def writeIterableToFile(filePath,contents,startDelimeter: str = '',endDelimeter: str = '\n', mode: str = 'a'):
+    if mode == 'w':
+        refreashFile(filePath)
     for content in contents:
-        with open(filePath,mode='a',encoding='utf-8') as f:
+        with open(filePath,mode=mode,encoding='utf-8') as f:
             f.write(startDelimeter + content + endDelimeter)
 
 

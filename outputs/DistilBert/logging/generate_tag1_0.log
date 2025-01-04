@@ -1,0 +1,11 @@
+2025-01-03 10:57:56,672 - INFO - HTTP Request: POST https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions "HTTP/1.1 200 OK"
+2025-01-03 10:58:30,207 - INFO - ######## QWEN_Turbo LLM API: 第 1 次生成数据 ########
+2025-01-03 10:58:35,249 - INFO - HTTP Request: POST https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions "HTTP/1.1 200 OK"
+2025-01-03 10:58:58,112 - INFO - 总 Token 消耗: 656
+2025-01-03 10:58:58,113 - INFO - 输入 Token: 463
+2025-01-03 10:58:58,114 - INFO - 输出 Token: 193
+2025-01-03 10:58:58,116 - INFO - ######## QWEN_Turbo LLM API: 第 2 次生成数据 ########
+2025-01-03 10:59:06,924 - INFO - HTTP Request: POST https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions "HTTP/1.1 200 OK"
+2025-01-03 10:59:50,183 - INFO - 总 Token 消耗: 1064
+2025-01-03 10:59:50,183 - INFO - 输入 Token: 673
+2025-01-03 10:59:50,183 - INFO - 输出 Token: 391

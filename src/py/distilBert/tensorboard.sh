@@ -1,0 +1,1 @@
+rm /data/workspace/projects/HupuKiller/outputs/DistilBert/logging/finetuneBert/* -rf && tensorboard --logdir=/data/workspace/projects/HupuKiller/outputs/DistilBert/logging/finetuneBert

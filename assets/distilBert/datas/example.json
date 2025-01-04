@@ -1,0 +1,22 @@
+[
+    {
+        "text": "This is a positive review about the product.",
+        "label": [1, 0, 0, 0]
+    },
+    {
+        "text": "The service was terrible and I would not recommend it.",
+        "label": [0, 1, 0, 0]
+    },
+    {
+        "text": "The product is okay, but it could be better.",
+        "label": [0, 0, 1, 0]
+    },
+    {
+        "text": "I am neutral about this experience.",
+        "label": [0, 0, 0, 1]
+    },
+    {
+        "text": "This is another positive review.",
+        "label": [1, 0, 0, 0]
+    }
+]

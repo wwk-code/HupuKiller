@@ -18,15 +18,20 @@
 
 **Prior:**
 
-将现有的RAG系统迁移至 langchain 框架,包括: 用langchain API封装模型类、数据库操作Tool、PromptTemplate等，构造Chain、Agent，跑通同步逻辑验证后，集成异步逻辑的验证
+调用Qwen-trubo API，实现实时的NBA近期比赛数据查询。所有的操作全部用Langchain API实现
 
-将模型推理逻辑迁移至VLLM
+具体功能(暂定): 在NBA中国官网上，根据用户提问: "xxx.xxx的比赛有哪些" -> llm根据搜索结果列举出来，然后用户提问其中的某一场比赛时，llm可以进一步去其数据统计页面搜索，然后提取出对应逻辑并生成相应的信息给用户
+
+
+将本地LLAMA3模型推理逻辑迁移至VLLM
 
 **3st Version TODO：**
 
-训练一个NLU分类模型,协助生成LLAMA的inputs
+训练一个NLU分类模型,做为Qwen和本地LLAMA的门控
 
-用TensorRT部署部署NLU模型,
+用TensorRT部署部署NLU模型,将其集成进已有的langchain-agent中
+
+使用 langgraph 重构 agents
 
 搭建简易chatbot应用
 
