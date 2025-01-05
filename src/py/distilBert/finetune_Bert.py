@@ -342,6 +342,13 @@ def get_label_list(raw_dataset, split="train") -> List[str]:
     return label_list
 
 
+# 冻结 Bert 的前六层
+def freezeBertForFinetune(model: transformers.models.bert.modeling_bert.BertForMaskedLM = None):
+    for i,layer in enumerate(model.bert.encoder.layer):
+        for param in layer.parameters():
+            param.requires_grad = True if i > 5 else False
+
+
 def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
@@ -586,7 +593,8 @@ def main():
         trust_remote_code=model_args.trust_remote_code,
         ignore_mismatched_sizes=model_args.ignore_mismatched_sizes,
     )
-
+    freezeBertForFinetune(model)
+    logger.info("############## Freezing Bert Model's encoder layers from 0 to 5 ##############")
     # Padding strategy
     if data_args.pad_to_max_length:
         padding = "max_length"

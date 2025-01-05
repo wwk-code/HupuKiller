@@ -36,7 +36,7 @@ def transTxt2Json():
         text , tag = text.strip() , tag.strip()
         outputJsonDataItems.append({'text' : text,'label' : tag})
 
-    trainRatio = 0.85
+    trainRatio = 0.90
     random.shuffle(outputJsonDataItems)
     trainDataItems,evalDataItems = split_list(outputJsonDataItems,trainRatio)
     write_list_of_dicts_to_json(trainJsonFilePath,trainDataItems)

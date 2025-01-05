@@ -24,6 +24,7 @@ def getNewTestDatas():
 # 检测微调后的模型的推理精度
 def fineTuneBenchmark():
     model_path = '/data/workspace/projects/HupuKiller/outputs/DistilBert/fineTune'
+    # model_path = '/data/workspace/projects/HupuKiller/outputs/DistilBert/fineTune_bestPerf'
     model = BertForSequenceClassification.from_pretrained(model_path)
     tokenizer = BertTokenizer.from_pretrained(model_path)
     pipe = pipeline("text-classification", model=model, tokenizer=tokenizer,device=torch.device('cuda:0'))
@@ -57,7 +58,7 @@ def fineTuneBenchmark():
     for idx in misMatchedIndexs:
         print(f"idx: {idx} text: {texts[idx]} label: {labels[idx]} predict: {predictLables[idx]}")
     
-
+# best precision: 0.9994385176866929
 # current Test accuracy: 0.9455159112825458
 # 2st Test accuracy: 0.8855255916345625
 

@@ -19,5 +19,18 @@ def transTxt():
     writeIterableToFile(outputFilePath,splitContent,mode='a')    
 
 
+def removeEmptyLine():
+    filePath = '/data/workspace/projects/HupuKiller/assets/distilBert/datas/new_tag3_1.txt'
+    contents = readFileContent(filePath)
+    newContents = []
+    for line in contents:
+        if len(line.strip()) == 0:
+            continue
+        newContents.append(line)
+
+    refreashFile(filePath)
+    writeIterableToFile(filePath,newContents,mode='a')
+    
 if __name__ == '__main__':
-    transTxt()
+    # transTxt()
+    removeEmptyLine()
