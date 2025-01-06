@@ -1,0 +1,19 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+gitpython==3.1.41
+tensorboardX==1.8
+psutil==5.6.6
+=======
+=======
+>>>>>>> dbfd4f9d007c188260cf750a554c6901c8a3aa9e
+transformers
+
+gitpython==3.1.41
+tensorboard>=1.14.0
+tensorboardX==1.8
+psutil==5.6.6
+scipy>=1.4.1
+<<<<<<< HEAD
+>>>>>>> dbfd4f9d007c188260cf750a554c6901c8a3aa9e
+=======
+>>>>>>> dbfd4f9d007c188260cf750a554c6901c8a3aa9e

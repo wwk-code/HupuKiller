@@ -1,0 +1,35 @@
+rm /data/workspace/projects/HupuKiller/outputs/DistilBert/fineTune/* -rf 
+python /data/workspace/projects/HupuKiller/src/py/distilBert/finetune_Bert.py \
+    --model_name_or_path  /root/.cache/huggingface/hub/models--google-bert--bert-base-chinese/snapshots/c30a6ed22ab4564dc1e3b2ecbf6e766b0611a33f \
+    --train_file /data/workspace/projects/HupuKiller/assets/distilBert/datas/train.json \
+    --validation_file /data/workspace/projects/HupuKiller/assets/distilBert/datas/evaluation.json \
+    --text_column_names text \
+    --label_column_name label \
+    --max_seq_length 256 \
+    --output_dir /data/workspace/projects/HupuKiller/outputs/DistilBert/fineTune \
+    --overwrite_output_dir True \
+    --do_train True \
+    --do_eval True \
+    --per_device_train_batch_size 16 \
+    --per_device_eval_batch_size 16 \
+    --gradient_accumulation_steps 16 \
+    --learning_rate 2e-5 \
+    --weight_decay 0.01 \
+    --num_train_epochs 50 \
+    --lr_scheduler_type linear \
+    --warmup_ratio 0.1 \
+    --log_level info \
+    --logging_dir /data/workspace/projects/HupuKiller/outputs/DistilBert/fineTune \
+    --logging_strategy steps \
+    --logging_steps 5 \
+    --eval_strategy steps \
+    --eval_steps 5 \
+    --save_strategy steps \
+    --save_steps 5 \
+    --save_total_limit 3 \
+    --bf16 True \
+    --tf32 True  \
+    --dataloader_num_workers 1 \
+    --load_best_model_at_end True \
+    --preprocessing_num_workers 1 \
+    --shuffle_train_dataset True 

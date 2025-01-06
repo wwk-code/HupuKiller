@@ -1,0 +1,37 @@
+{
+    "nbaFinalAverageData_QA_template_1": {
+        "instruction": "{instruction}",
+        "input": "根据用户问题和背景知识，回答与 NBA 球员相关的数据。如果背景知识中包含与用户问题匹配的信息，按照以下格式输出：球员: {球员姓名} | {场均出场时间: 数值分钟} | {年龄: 数值岁} | {场均得分: 数值分} | {场均篮板: 数值个} | {场均助攻: 数值次} | {场均抢断: 数值次} | {场均盖帽: 数值次}",
+        "output": "{{球员:{player}}} | {{场均出场时间: {playTime}分钟}} | {{年龄: {yearsOld}岁}} | {{场均得分: {point}分}} | {{场均篮板: {playground}个}} | {{场均助攻: {assist}次}} | {{场均抢断: {steal}次}} | {{场均盖帽: {block}次}}"
+    },
+    "FakeNbaFinalAverageData_QA_template_1": {
+        "instruction": "{fakeInstruction}",
+        "input": "根据用户问题和背景知识，回答与 NBA 球员相关的数据。如果背景知识中包含与用户问题匹配的信息，按照以下格式输出：球员: {球员姓名} | {场均出场时间: 数值分钟} | {年龄: 数值岁} | {场均得分: 数值分} | {场均篮板: 数值个} | {场均助攻: 数值次} | {场均抢断: 数值次} | {场均盖帽: 数值次}。如果无法匹配到明确答案，请说明'无法找到相关数据'",
+        "output": "无法找到相关数据"
+    },
+    "NeedRAGNbaFinalAverageData_QA_template_1": {
+        "instruction": "{needRAGInstruction}",
+        "input": "如果无法找到相关数据，请尝试查询本地知识库",
+        "output": "无法找到相关数据，请尝试查询本地知识库"
+    },
+    "nbaFinalAverageData_Concise_Right_QA_template_1": {
+        "instruction": "根据用户问题和背景知识回答问题",
+        "input": "背景知识：球员: {player} | 场均出场时间: {minute}分钟 | 年龄: {age}岁 | 场均得分: {point}分 | 场均篮板: {rebound}个 | 场均助攻: {assist}次 | 场均抢断: {steal}次 | 场均盖帽: {block}次。问题:{question}",
+        "output": "球员: {player} | 场均出场时间: {minute}分钟 | 年龄: {age}岁 | 场均得分: {point}分 | 场均篮板: {rebound}个 | 场均助攻: {assist}次 | 场均抢断: {steal}次 | 场均盖帽: {block}次"
+    },
+    "nbaFinalAverageData_Concise_Error_QA_template_1": {
+        "instruction": "根据用户问题和背景知识回答问题",
+        "input": "背景知识: 抱歉,我无法回答你这个问题，我的知识库中没有定位到对应信息。问题:{question}",
+        "output": "抱歉,我无法回答你这个问题，我的知识库中没有定位到对应信息"
+    },
+    "nbaFinalAverageData_Concise_Right_QA_template_2": {
+        "instruction": "根据用户问题和背景知识回答问题",
+        "input": "背景知识：球员: {player} | 场均出场时间: {minute}分钟 | 年龄: {age}岁 | 场均得分: {point}分 | 场均篮板: {rebound}个 | 场均助攻: {assist}次 | 场均抢断: {steal}次 | 场均盖帽: {block}次。问题:{question}",
+        "output": "<自定义开始>球员: {player} | 场均出场时间: {minute}分钟 | 年龄: {age}岁 | 场均得分: {point}分 | 场均篮板: {rebound}个 | 场均助攻: {assist}次 | 场均抢断: {steal}次 | 场均盖帽: {block}次<自定义结束>"
+    },
+    "nbaFinalAverageData_Concise_Error_QA_template_2": {
+        "instruction": "根据用户问题和背景知识回答问题",
+        "input": "背景知识: 抱歉,我无法回答你这个问题，我的知识库中没有定位到对应信息。问题:{question}",
+        "output": "<自定义开始>抱歉,我无法回答你这个问题，我的知识库中没有定位到对应信息<自定义结束>"
+    }
+}
